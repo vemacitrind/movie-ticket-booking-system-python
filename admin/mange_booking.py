@@ -1,6 +1,7 @@
 from .admin_base import AdminBase
 import mysql.connector as sql
-
+from rich.console import Console
+from rich.table import Table
 class ManageBooking(AdminBase):
     
     def __init__(self, theatre_id):
@@ -50,17 +51,37 @@ class ManageBooking(AdminBase):
                 print("\n🚫 No bookings found for this theatre.")
                 return
 
-            print("\n📜 Bookings List:")
-            print("-" * 80)
-            print(f"No. {'Booking ID':<12}{'User':<20}{'Show Date':<12}{'Show Time':<10}{'Tickets':<8}{'Total Cost':<10}")
-            print("-" * 80)
-            i=0
-            for booking in bookings:
-                print(f"{i}   {booking[0]:<12}{booking[1]} {booking[2]:<18}{booking[3]:<12}{str(booking[4]):<10}{str(booking[5]):<8}{str(booking[6]):<10}")
-                i+=1
             
-            print("-" * 80)
-        
+            console = Console()
+
+            
+            table = Table(title="📜 Bookings List", show_lines=True)
+
+            
+            table.add_column("No.", justify="center", style="cyan", no_wrap=True)
+            table.add_column("Booking ID", justify="center", style="blue")
+            table.add_column("User", justify="left", style="magenta")
+            table.add_column("Show Date", justify="center", style="green")
+            table.add_column("Show Time", justify="center", style="yellow")
+            table.add_column("Tickets", justify="center", style="red")
+            table.add_column("Total Cost", justify="center", style="bold cyan")
+
+            
+            for i, booking in enumerate(bookings):
+                user_name = f"{booking[1]} {booking[2]}"  # Combine First Name and Last Name
+                table.add_row(
+                    str(i),         # Serial No.
+                    str(booking[0]), # Booking ID
+                    user_name,       # User (First + Last Name)
+                    str(booking[3]), # Show Date
+                    str(booking[4]), # Show Time
+                    str(booking[5]), # Number of Tickets
+                    str(booking[6])  # Total Cost
+                )
+
+            # Print the table
+            console.print(table)
+
         except sql.Error as e:
             print("❌ Error fetching bookings:", e)
 

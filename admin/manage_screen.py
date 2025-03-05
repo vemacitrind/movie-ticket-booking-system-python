@@ -1,7 +1,8 @@
 from .admin_base import AdminBase
 import mysql.connector as sql
 import numpy as np
-
+from rich.console import Console
+from rich.table import Table
 class ManageScreen(AdminBase):
     def __init__(self, theatre_id):
         super().__init__()
@@ -108,15 +109,30 @@ class ManageScreen(AdminBase):
             self.cursor.execute(query, (self.theatre_id,))
             screens = self.cursor.fetchall()
 
-            print("\n📜 Screens for Theatre ID:", self.theatre_id)
-            print("-" * 80)
-            print(f"{'Screen ID':<12}{'Gold Rows':<12}{'Gold Columns':<15}{'Silver Rows':<12}{'Silver Columns':<15}")
-            print("-" * 80)
+            console = Console()
 
+            
+            table = Table(title=f"📜 Screens for Theatre ID: {self.theatre_id}", show_lines=True)
+
+            # Define table columns
+            table.add_column("Screen ID", justify="center", style="blue")
+            table.add_column("Gold Rows", justify="center", style="green")
+            table.add_column("Gold Columns", justify="center", style="yellow")
+            table.add_column("Silver Rows", justify="center", style="magenta")
+            table.add_column("Silver Columns", justify="center", style="cyan")
+
+            
             for screen in screens:
-                print(f"{screen[0]:<12}{screen[2]:<12}{screen[3]:<15}{screen[5]:<12}{screen[6]:<15}")
+                table.add_row(
+                    str(screen[0]),  # Screen ID
+                    str(screen[2]),  # Gold Rows
+                    str(screen[3]),  # Gold Columns
+                    str(screen[5]),  # Silver Rows
+                    str(screen[6])   # Silver Columns
+                )
 
-            print("-" * 80)
+            
+            console.print(table)
 
         except sql.Error as e:
             print("❌ Error fetching screens:", e)

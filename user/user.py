@@ -1,7 +1,7 @@
 import subprocess
 from .db_setup import get_cursor
 import re
-
+import pwinput
 class User:
     def __init__(self):
         self.web_uid = -1
@@ -37,7 +37,7 @@ class User:
 
     def login(self):
         web_uid1 = input("Enter your web user ID: ")
-        password = input("Enter your password: ")
+        password = pwinput.pwinput("Enter your password: ",mask="*").strip()
         query = "SELECT password, First_Name, Last_Name FROM web_user WHERE Web_User_ID=%s"
 
         connection, cursor = get_cursor()
@@ -93,8 +93,13 @@ class User:
         while not self.is_valid_phone(phone_no):
             print("❌ Phone number must be exactly 10 digits.")
             phone_no = input("Enter your phone number: ")
-        
-        password = input("Create a password: ")
+        while True:
+            password = pwinput.pwinput("Create a password: ",mask="*").strip()
+            if len(password)!=6:
+                print("password length must be 6 digit")
+                continue
+            break
+        print("Password set successfully!")
         
         check_query = "SELECT COUNT(*) FROM web_user WHERE Web_User_ID = %s"
         insert_query = "INSERT INTO web_user (Web_User_ID, First_Name, Last_Name, Email_ID, Age, Phone_Number, password) VALUES (%s, %s, %s, %s, %s, %s, %s)"

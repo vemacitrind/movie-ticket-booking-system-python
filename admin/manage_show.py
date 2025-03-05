@@ -1,6 +1,7 @@
 from .admin_base import AdminBase
 import mysql.connector as sql
-
+from rich.console import Console
+from rich.table import Table
 class ManageShow(AdminBase):
     def __init__(self, theatre_id):
         super().__init__()
@@ -81,13 +82,39 @@ class ManageShow(AdminBase):
                 print("🚫 No shows found for the selected screens in this theatre.")
                 return
 
-            print("\n🎬 Shows List for Theatre ID:", self.theatre_id)
-            print("-" * 120)
-            print(f"{'Show ID':<12} {'Time':<10} {'Date':<12} {'GoldSeats':>12} {'SilverSeats':>12} {'GoldCost':>10} {'SilverCost':>12} {'Screen_Id':>10} {'Movie ID':>10}")
-            print("-" * 120)
+            
+            console = Console()
+
+            
+            table = Table(title=f"🎬 Shows List for Theatre ID: {self.theatre_id}", show_lines=True)
+
+            
+            table.add_column("Show ID", justify="center", style="cyan", no_wrap=True)
+            table.add_column("Time", justify="center", style="magenta")
+            table.add_column("Date", justify="center", style="magenta")
+            table.add_column("Gold Seats", justify="right", style="green")
+            table.add_column("Silver Seats", justify="right", style="green")
+            table.add_column("Gold Cost", justify="right", style="yellow")
+            table.add_column("Silver Cost", justify="right", style="yellow")
+            table.add_column("Screen ID", justify="center", style="blue")
+            table.add_column("Movie ID", justify="center", style="red")
+
+            # Add rows to the table
             for show in shows:
-                print(f"{show[0]:<12} {show[1]} {show[2]} {show[3]:>12} {show[4]:>12} {show[5]:>10} {show[6]:>12} {show[7]:>12} {show[8]}")
-            print("-" * 120)
+                table.add_row(
+                    str(show[0]),  # Show ID
+                    str(show[1]),  # Time
+                    str(show[2]),  # Date
+                    str(show[3]),  # Gold Seats
+                    str(show[4]),  # Silver Seats
+                    str(show[5]),  # Gold Cost
+                    str(show[6]),  # Silver Cost
+                    str(show[7]),  # Screen ID
+                    str(show[8])   # Movie ID
+                )
+
+            # Print the table
+            console.print(table)
 
         except sql.Error as e:
             print("❌ Error fetching shows:", e)

@@ -7,7 +7,8 @@ from rich.console import Console
 from user.user import User
 from termcolor import colored
 from user.db_setup import get_cursor
-
+from rich.table import Table
+from rich.console import Console
 x = False
 
 def getMovies():
@@ -23,16 +24,28 @@ def getMovies():
             if len(rows) == 0:
                 print("data not found")
                 return True
+            console = Console()
+            table = Table(title="Movie Details", show_lines=True)
 
+            # Add columns
+            table.add_column("Movie ID", justify="center", style="cyan", no_wrap=True)
+            table.add_column("Movie Name", justify="left", style="magenta", no_wrap=True)
+            table.add_column("Language", justify="center", style="yellow")
+            table.add_column("Genre", justify="center", style="green")
+            table.add_column("Audience", justify="center", style="red")
+
+            # Add data rows
             for row in rows:
-                print("Movie ID : ", row[0])
-                print("Movie    :", row[1])
-                print("Language :", row[2])
-                print("Genre    :", row[3])
-                print("Audience :", row[4])
-                print(
-                    "_____________________________________________________________________________________________________________")
+                table.add_row(
+                    str(row[0]),  # Movie ID
+                    row[1],       # Movie Name
+                    row[2],       # Language
+                    row[3],       # Genre
+                    row[4],       # Audience
+                )
 
+            # Print the formatted table
+            console.print(table)
             cursor.close()
             connection.close()
         except Exception as e:
@@ -41,7 +54,7 @@ def getMovies():
         print("Failed to get cursor, check DB connection!")
 
 def getTheatres():
-    query = "SELECT Theatre_ID, Name_of_Theatre, Area FROM theatre"
+    query = "SELECT Theatre_ID, Name_of_Theatre, Area FROM theatre where No_of_screens>0"
 
     # Get both connection and cursor
     connection, cursor = get_cursor()
@@ -59,10 +72,25 @@ def getTheatres():
                 return True
 
             # Print the fetched rows (movie_id and movie_name)
+            console = Console()
+            table = Table(title="Theatre Details", show_lines=True)
+
+            # Add columns
+            table.add_column("Theatre ID", justify="center", style="cyan", no_wrap=True)
+            table.add_column("Theatre Name", justify="left", style="magenta", no_wrap=True)
+            table.add_column("Area", justify="center", style="yellow")
+
+            # Add data rows
             for row in rows:
                 theatre_id, theatre_name, area = row
-                print(
-                    f"Theatre ID: {theatre_id},  Name: {theatre_name} , Area : {area}")
+                table.add_row(
+                    str(theatre_id),  # Theatre ID
+                    theatre_name,     # Theatre Name
+                    area,             # Area
+                )
+
+            # Print the formatted table
+            console.print(table)
 
             # Close the cursor and the connection after use
             cursor.close()
@@ -91,27 +119,41 @@ def getScreenId(mid, Theatre_ID):
             cursor.execute(query, (mid, like_pattern))
 
             rows = cursor.fetchall()
+            
+            
+            
             if len(rows) == 0:
-                print("data not foundxx")
+                print("data not found or theater not found")
                 return True
-            for row in rows:
-                # print(f"Screen ID: {row[0]}, Show ID: {row[1]}, Show Time: {row[2]}, Show Date: {row[3]}")
-                # print(f"Seats Remaining (Gold): {row[4]}, Seats Remaining (Silver): {row[5]}")
-                # print(f"Class Cost (Gold): {row[6]}, Class Cost (Silver): {row[7]}")
-                print("Show id : ", row[1])
-                print("Screen id : ", row[0])
-                print("show-Date : ", row[3])
-                print("show-time : ", row[2])
-                print("Remaining Gold seats : ", row[4])
-                print("Remaining Silver seats : ", row[5])
+          
+            console = Console()
+            table = Table(title="Show Details", show_lines=True)
 
-                print("-" * 100)
-                print()
-                print("        Gold seat Cost : ",
-                      row[6], "            Silver seat Cost : ", row[7])
-                print()
-                print("-"*100)
-                print()
+            # Add columns
+            table.add_column("Show ID", justify="center", style="cyan", no_wrap=True)
+            table.add_column("Screen ID", justify="center", style="magenta", no_wrap=True)
+            table.add_column("Show Date", justify="center", style="yellow")
+            table.add_column("Show Time", justify="center", style="green")
+            table.add_column("Gold Seats Left", justify="center", style="red")
+            table.add_column("Silver Seats Left", justify="center", style="blue")
+            table.add_column("Gold Seat Cost", justify="center", style="bold red")
+            table.add_column("Silver Seat Cost", justify="center", style="bold blue")
+
+            # Add data rows
+            for row in rows:
+                table.add_row(
+                    str(row[1]),  # Show ID
+                    str(row[0]),  # Screen ID
+                    str(row[3]),  # Show Date
+                    str(row[2]),  # Show Time
+                    str(row[4]),  # Remaining Gold Seats
+                    str(row[5]),  # Remaining Silver Seats
+                    f"{row[6]}",  # Gold Seat Cost
+                    f"{row[7]}",  # Silver Seat Cost
+                )
+
+            # Print the formatted table
+            console.print(table)
 
             cursor.close()
             connection.close()
@@ -234,6 +276,7 @@ def display_theatre(gold_seats, silver_seats, screen_id):
         row = []
         for j in range(gc):
             is_available = gold_seats[i * gc + j] == '1'
+            #  Maps a 2D layout onto a 1D gold_seats list
             # Modified to always show 3 digits with leading zeros
             seat_text = Text(f"{seat_num:03d}", style="bold black")
             row.append(Panel(
@@ -318,8 +361,8 @@ def get_ticket_cost(show_id):
                 return True
             if not rows:
                 return None  
-
-            return [rows[0][0], rows[0][1], rows[0][2], rows[0][3]]
+            
+            return [rows[0][0], rows[0][1], rows[0][2], rows[0][3]]#gp,sp,gs,ss
         except Exception as e:
             print(f"Error executing query: {e}")
         finally:
@@ -520,6 +563,7 @@ def getMovieByShow_ID(show_id):
             query1 = "SELECT Movie_ID FROM show_table WHERE Show_ID = %s"  
             cursor.execute(query1, (show_id,))
             rows = cursor.fetchall()
+            
             if len(rows) == 0:
                 print("data not found")
                 return True
@@ -582,15 +626,23 @@ def cancelTickets():
                 print("data not found")
                 return True
 
+            console = Console()
             if rows:
                 print()
+                table = Table(title="Booking Details",show_lines=True)
+
+                # Adding columns
+                table.add_column("Booking ID", justify="center", style="cyan", no_wrap=True)
+                table.add_column("Movie Name", justify="left", style="magenta")
+                table.add_column("Seats Booked", justify="center", style="green")
+
+                # Loop through rows and add data to the table
                 for row in rows:
-                    print("Booking ID:", row[0], end=" | ")
-                    movie_name = getMovieByShow_ID(row[1])
-                    if movie_name:
-                        print("Movie:", movie_name, end=" | ")
-                    print("No. of seats booked:", row[2])
-                    print()
+                    movie_name = getMovieByShow_ID(row[1]) or "N/A"
+                    table.add_row(str(row[0]), movie_name, str(row[2]))
+
+                # Print the table
+                console.print(table)
             else:
                 print("No bookings found for this user.")
     except Exception as e:
@@ -683,15 +735,30 @@ def view_booking():
                 print("data not found")
                 return True
             if rows:
-                print(
-                    "___________________________________________________________________________________________________________")
+                console = Console()
+                table = Table(title="Booking Details", show_lines=True)
+
+                # Add columns
+                table.add_column("Booking ID", justify="center", style="cyan", no_wrap=True)
+                table.add_column("Movie", justify="left", style="magenta", no_wrap=True)
+                table.add_column("Seats Booked", justify="center", style="yellow")
+                table.add_column("Total Cost", justify="center", style="bold red")
+
+                # Add data rows
                 for row in rows:
-                    print("Booking ID:", row[0], end=" | ")
-                    movie_name = getMovieByShow_ID(row[1])
-                    if movie_name:
-                        print("Movie:", movie_name, end=" | ")
-                    print("No. of seats booked:", row[2], end=" | ")
-                    print("Total Cost : ", row[3])
+                    booking_id, show_id, seats_booked, total_cost = row
+                    movie_name = getMovieByShow_ID(show_id) or "N/A"
+
+                    table.add_row(
+                        str(booking_id),  # Booking ID
+                        movie_name,       # Movie Name
+                        str(seats_booked), # Number of Seats Booked
+                        f"{total_cost}",  # Total Cost
+                    )
+
+                # Print the formatted table
+                console.print(table)
+
             else:
                 print("No bookings found for this user.")
     except Exception as e:
@@ -718,6 +785,7 @@ while True:
         movie_id = input("enter a movie id : ")
         print()
         getTheatres()
+
         theatre_id = input("enter a theatre id : ")
 
         print()
@@ -744,10 +812,7 @@ while True:
             print()
             continue
         if rows:
-            # screen_id, class_cost_gold, class_cost_silver = row
-            # print(f"Screen ID: {screen_id}")
-            # print(f"Class Cst (Gold): {class_cost_gold}")
-            # print(f"Class Cost (Silver): {class_cost_silver}")
+            
             list4 = rows
             screen_id = list4[0][0]
             class_cost_gold = list4[0][1]

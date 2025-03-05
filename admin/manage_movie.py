@@ -1,6 +1,8 @@
 from .admin_base import AdminBase
 import mysql.connector as sql
-
+from rich.console import Console
+from rich.table import Table
+# movie table
 class ManageMovie(AdminBase):
 
     def __init__(self):
@@ -66,6 +68,7 @@ class ManageMovie(AdminBase):
             if result:
                 last_movie_id = result[0]
                 new_number = str(int(last_movie_id) + 1).zfill(3)
+                # zfill ->use for 3 digit means first two 0 001,..011
             else:
                 new_number = "001"
 
@@ -167,15 +170,30 @@ class ManageMovie(AdminBase):
                 print("🚫 No movies found.")
                 return
 
-            print("\n🎬 Movies List:")
-            print("-" * 80)
-            print(f"{'Movie ID':<12}{'Name':<29}{'Language':<15}{'Genre':<17}{'Target Audience':<20}")
-            print("-" * 80)
+            console = Console()
 
-            for movie in movies:
-                print(f"{movie[0]:<12}{movie[1]:<29}{movie[2]:<15}{movie[3]:<17}{movie[4]:<20}")
             
-            print("-" * 80)
+            table = Table(title="🎬 Movies List", show_lines=True)
+
+            # Define table columns
+            table.add_column("Movie ID", justify="center", style="cyan")
+            table.add_column("Name", justify="left", style="blue", no_wrap=True)
+            table.add_column("Language", justify="center", style="green")
+            table.add_column("Genre", justify="center", style="magenta")
+            table.add_column("Target Audience", justify="center", style="yellow")
+
+            # Add rows to the table
+            for movie in movies:
+                table.add_row(
+                    str(movie[0]),  # Movie ID
+                    movie[1],       # Name
+                    movie[2],       # Language
+                    movie[3],       # Genre
+                    movie[4]        # Target Audience
+                )
+
+            
+            console.print(table)
 
         except sql.Error as e:
             print("❌ Error fetching movies:", e)

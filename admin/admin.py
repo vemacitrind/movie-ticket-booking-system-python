@@ -3,8 +3,9 @@ from .mange_booking import ManageBooking
 from .manage_screen import ManageScreen
 from .manage_show import ManageShow
 from .manage_movie import ManageMovie
-import  mysql.connector
-
+import  mysql.connector as sql
+from rich.console import Console
+from rich.table import Table
 class Admin(AdminBase):
     def __init__(self):
         if super().__init__():
@@ -53,15 +54,36 @@ class Admin(AdminBase):
             self.cursor.execute(query)
             theatres = self.cursor.fetchall()
             
-            print("\n🎭 Available Theatres:")
+            console = Console()
+
+            # Create a Rich Table
+            table = Table(title="🎭 Available Theatres", show_lines=True)
+
+            # Define table columns
+            table.add_column("Theatre ID", justify="center", style="cyan")
+            table.add_column("Name", justify="left", style="blue", no_wrap=True)
+            table.add_column("Screens", justify="center", style="green")
+            table.add_column("Area", justify="left", style="magenta")
+
+            # Add rows to the table
             for theatre in theatres:
-                print(f"ID: {theatre[0]}, Name: {theatre[1]}, Screens: {theatre[2]}, Area: {theatre[3]}")
+                table.add_row(
+                    str(theatre[0]),  # Theatre ID
+                    theatre[1],       # Name
+                    str(theatre[2]),  # Screens
+                    theatre[3]        # Area
+                )
+
+            # Print the table
+            console.print(table)
+
         except sql.Error as e:
             print("❌ Error fetching theatres:", e)
 
     def get_next_theatre_id(self,cursor):
         """Fetch the next theatre ID in the format 'T01', 'T02'..."""
         cursor.execute("SELECT MAX(Theatre_ID) FROM theatre;")
+        # jo 3 id to t03 last max t03 index 1 thi aetle 0 thi start +1 2digits format
         last_id = cursor.fetchone()[0]
         if last_id:
             next_id = f"T{int(last_id[1:]) + 1:02d}"
@@ -94,7 +116,7 @@ class Admin(AdminBase):
                     VALUES (%s, %s, %s, %s, %s, %s, %s, %s);""",
                             (screen_id, theatre_id, no_row_gold, no_col_gold, availability_gold,
                                 no_row_silver, no_col_silver, availability_silver))
-
+#%s - string
             self.connection.commit()
             print(f"✅ Theatre '{theatre_name}' added successfully with {num_screens} screens.")
         except Exception as e:
@@ -105,8 +127,8 @@ class Admin(AdminBase):
         try:
             theatre_id = input('Enter Theatre_ID: ').upper()
 
-            self.cursor.execute(f"UPDATE theatre SET No_of_Screens = 0 WHERE Theatre_ID = '{theatre_id}'")
-            
+            # self.cursor.execute(f"UPDATE theatre SET No_of_Screens = 0 WHERE Theatre_ID = '{theatre_id}'")
+            self.cursor.execute(f"DELETE FROM theatre WHERE Theatre_ID = '{theatre_id}'")
             if self.cursor.rowcount > 0:
                 self.connection.commit()
                 print('✅ Theatre removed.')
